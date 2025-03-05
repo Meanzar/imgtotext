@@ -1,7 +1,6 @@
-
 from transformers import VisionEncoderDecoderModel, ViTImageProcessor, AutoTokenizer
 import torch
-from PIL import Image
+from PIL import Image 
 
 model = VisionEncoderDecoderModel.from_pretrained("nlpconnect/vit-gpt2-image-captioning")
 feature_extractor = ViTImageProcessor.from_pretrained("nlpconnect/vit-gpt2-image-captioning")
