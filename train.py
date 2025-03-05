@@ -1,30 +1,38 @@
 import torch
+import matplotlib.pyplot as plt
 import torch.nn as nn
 from torch.utils.data import DataLoader, Subset
-from torchvision import transforms
-from model import model, feature_extractor, tokenizer, device
+from transformers import VisionEncoderDecoderModel, AutoTokenizer, ViTImageProcessor
 from datasets import load_dataset
 from PIL import Image
 
 # Hyperparameters
-epochs = 10
+epochs = 3
 learning_rate = 0.001
-max_data_length = 1000  # Set the maximum length of the data
+max_data_length = 500  
 
-# Data transformations
-transform = transforms.Compose([
-    transforms.Resize((224, 224)),
-    transforms.ToTensor(),
-])
+# Load the pretrained model, feature extractor, and tokenizer
+model = VisionEncoderDecoderModel.from_pretrained("nlpconnect/vit-gpt2-image-captioning")
+feature_extractor = ViTImageProcessor.from_pretrained("nlpconnect/vit-gpt2-image-captioning")
+tokenizer = AutoTokenizer.from_pretrained("nlpconnect/vit-gpt2-image-captioning")
+
+# Set the device
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+model.to(device)
+
+# Freeze the vision encoder layers (ViT encoder)
+for param in model.encoder.parameters():
+    param.requires_grad = False
+
 
 # Load COCO dataset
 coco_dataset = load_dataset("jxie/coco_captions", split='train')
 
-# Define a custom dataset class to apply transformations
+# Custom dataset class
 class CocoCaptionsDataset(torch.utils.data.Dataset):
-    def __init__(self, dataset, transform=None):
+    def __init__(self, dataset, feature_extractor):
         self.dataset = dataset
-        self.transform = transform
+        self.feature_extractor = feature_extractor
 
     def __len__(self):
         return len(self.dataset)
@@ -35,40 +43,45 @@ class CocoCaptionsDataset(torch.utils.data.Dataset):
             image = Image.open(image).convert("RGB")
         else:
             image = image.convert("RGB")
-        if self.transform:
-            image = self.transform(image)
+
+        # Preprocess image
+        processed = self.feature_extractor(images=image, return_tensors="pt")['pixel_values']
+        processed = processed.squeeze(0)  # Remove batch dimension
+
         caption = self.dataset[idx]['caption']
-        return image, caption
+        return processed, caption
 
 # Create dataset and dataloader
-coco_dataset = CocoCaptionsDataset(coco_dataset, transform=transform)
+coco_dataset = CocoCaptionsDataset(coco_dataset, feature_extractor)
 subset_indices = list(range(min(max_data_length, len(coco_dataset))))
 coco_subset = Subset(coco_dataset, subset_indices)
 data_loader = DataLoader(coco_subset, batch_size=32, shuffle=True)
 
-criterion = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
 def train():
     model.train()
     for epoch in range(epochs):
-        for i, (images, captions) in enumerate(data_loader):
-            images = images.to(device)
-            tokenized_captions = tokenizer(captions, return_tensors="pt", padding=True, truncation=True)
-            input_ids = tokenized_captions.input_ids.to(device)
-            
+        for step, (images, captions) in enumerate(data_loader):
+            images = images.to(device)  
 
-            # Forward pass
+            # Tokenize captions as a batch
+            tokenized = tokenizer(captions, return_tensors="pt", padding=True, truncation=True, max_length=128)
+            input_ids = tokenized.input_ids.to(device)
+            
+            # Forward pass (model computes loss automatically when labels are given)
+            optimizer.zero_grad()  
             outputs = model(pixel_values=images, labels=input_ids)
             loss = outputs.loss
-
+            
             # Backward pass and optimization
             loss.backward()
             optimizer.step()
-            optimizer.zero_grad()
+            print(f'Epoch {epoch+1}, step {step+1}, loss = {loss.item()}')
 
-            
-            print(f'Epoch {epoch}, step {i}, loss = {loss.item()}')
+    # Save the trained model state
+    torch.save(model.state_dict(), "imgtotext_transformer.pth")
+    print("Model saved.")    
 
 if __name__ == "__main__":
     train()
