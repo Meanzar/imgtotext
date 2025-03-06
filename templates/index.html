@@ -17,13 +17,13 @@
             align-items: center;
             justify-content: center;
             height: 100vh;
-            background: linear-gradient(135deg, #f5f5f5, #dcdcdc);
+            background: #C89F9C;
             color: #333;
             text-align: center;
             padding: 20px;
         }
         .container {
-            background: rgba(255, 255, 255, 0.9);
+            background: #E0BDBA;
             padding: 30px;
             border-radius: 10px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
@@ -41,8 +41,8 @@
         .file-label {
             display: block;
             padding: 12px 20px;
-            border-radius: 5px;
-            background: #007BFF;
+            border-radius: 10px;
+            background: #7A6967;
             color: white;
             cursor: pointer;
             text-align: center;
@@ -50,13 +50,11 @@
             transition: background 0.3s;
         }
         .file-label:hover {
-            background: #0056b3;
+            background: #645653;
         }
         .image-preview {
             margin-top: 20px;
             display: none;
-            filter: blur(5px);
-            transition: filter 0.3s ease-in-out;
         }
         .image-preview img {
             width: 100%;
@@ -69,16 +67,22 @@
             width: 100%;
             padding: 12px;
             border: none;
-            background: #28a745;
+            background: #7A6967;
             color: white;
             font-size: 1rem;
             cursor: pointer;
             transition: background 0.3s ease;
-            border-radius: 5px;
+            border-radius: 10px;
             margin-top: 15px;
         }
         button:hover {
-            background: #218838;
+            background: #645653;
+        }
+        #generate-caption {
+            background: #A37D7A;
+        }
+        #generate-caption:hover {
+            background: #8D6A68;
         }
         .caption {
             margin-top: 15px;
@@ -101,7 +105,6 @@
         <button type="submit" id="generate-caption">Générer une légende</button>
         <div class="caption" id="caption"></div>
     </div>
-
     <script>
         document.getElementById('file-input').addEventListener('change', function(event) {
             const file = event.target.files[0];
@@ -111,7 +114,6 @@
                     const previewImg = document.getElementById('preview-img');
                     previewImg.src = e.target.result;
                     document.getElementById('image-preview').style.display = 'block';
-                    document.getElementById('image-preview').style.filter = 'blur(0px)';
                 };
                 reader.readAsDataURL(file);
             }
@@ -125,15 +127,12 @@
                 alert('Veuillez sélectionner une image.');
                 return;
             }
-
             const formData = new FormData();
             formData.append('file', file);
-
             const response = await fetch('/generate_caption', {
                 method: 'POST',
                 body: formData
             });
-
             const result = await response.json();
             if (result.error) {
                 alert(result.error);
