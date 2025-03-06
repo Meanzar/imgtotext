@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Générateur de légende d'image</title>
+    <title>Alt Generator</title>
     <style>
         * {
             box-sizing: border-box;
@@ -94,15 +94,15 @@
 </head>
 <body>
     <div class="container">
-        <h1>Générateur de légende d'image</h1>
+        <h1>Alt Generator</h1>
         <form id="upload-form" enctype="multipart/form-data">
-            <label for="file-input" class="file-label">Sélectionner une image</label>
+            <label for="file-input" class="file-label">Select an image</label>
             <input type="file" id="file-input" name="file" accept="image/*">
         </form>
         <div class="image-preview" id="image-preview">
             <img id="preview-img" src="" alt="Image téléchargée">
         </div>
-        <button type="submit" id="generate-caption">Générer une légende</button>
+        <button type="submit" id="generate-caption">Generate an alt</button>
         <div class="caption" id="caption"></div>
     </div>
     <script>
@@ -137,7 +137,7 @@
             if (result.error) {
                 alert(result.error);
             } else {
-                document.getElementById('caption').textContent = `Légende : ${result.caption}`;
+                document.getElementById('caption').textContent = `Alt : ${result.caption}`;
             }
         });
     </script>

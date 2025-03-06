@@ -1,5 +1,4 @@
 import torch
-import matplotlib.pyplot as plt
 import torch.nn as nn
 from torch.utils.data import DataLoader, Subset
 from transformers import VisionEncoderDecoderModel, AutoTokenizer, ViTImageProcessor
@@ -9,6 +8,8 @@ from PIL import Image
 # Hyperparameters
 epochs = 10
 learning_rate = 0.001
+# Limit the number of data samples to use for training
+max_data_length = 4096
 
 # Load the pretrained model, feature extractor, and tokenizer
 model = VisionEncoderDecoderModel.from_pretrained("nlpconnect/vit-gpt2-image-captioning")
@@ -52,7 +53,9 @@ class CocoCaptionsDataset(torch.utils.data.Dataset):
 
 # Create dataset and dataloader
 coco_dataset = CocoCaptionsDataset(coco_dataset, feature_extractor)
-data_loader = DataLoader(coco_dataset, batch_size=32, shuffle=True, num_workers=4)
+subset_indices = list(range(min(max_data_length, len(coco_dataset))))
+coco_subset = Subset(coco_dataset, subset_indices)
+data_loader = DataLoader(coco_subset, batch_size=32, shuffle=True)
 
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
@@ -62,16 +65,14 @@ def train():
         for step, (images, captions) in enumerate(data_loader):
             images = images.to(device)  
 
-            # Tokenize captions as a batch
+            # Convert captions to input_ids
             tokenized = tokenizer(captions, return_tensors="pt", padding=True, truncation=True, max_length=128)
             input_ids = tokenized.input_ids.to(device)
             
-            # Forward pass (model computes loss automatically when labels are given)
             optimizer.zero_grad()  
             outputs = model(pixel_values=images, labels=input_ids)
             loss = outputs.loss
-            
-            # Backward pass and optimization
+
             loss.backward()
             optimizer.step()
             print(f'Epoch {epoch+1}, step {step+1}, loss = {loss.item()}')
