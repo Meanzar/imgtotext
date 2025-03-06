@@ -35,3 +35,5 @@ if __name__ == "__main__":
     captions = predict_step(image_paths)
     for img, caption in zip(image_paths, captions):
         print(f"Image: {img} - Caption: {caption}")
+        
+    torch.save(model.state_dict(), "imgtotext_rnn.pth")
