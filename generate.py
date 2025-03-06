@@ -4,9 +4,6 @@ from model import model, feature_extractor, tokenizer, device
 
 # Load the trained model state
 model.load_state_dict(torch.load("imgtotext_transformer.pth", map_location=device))
-model_state = torch.load("imgtotext_transformer.pth", map_location="cpu")
-for key, value in model_state.items():
-    print(key, value.shape)
 # Generation hyperparameters
 max_length = 16
 num_beams = 4
@@ -36,6 +33,5 @@ if __name__ == "__main__":
     # Example usage with your three images
     image_paths = ["human.jpg", "lionn.jpeg", "images.jpeg"]
     captions = predict_step(image_paths)
-    print(captions)
     for img, caption in zip(image_paths, captions):
         print(f"Image: {img} - Caption: {caption}")

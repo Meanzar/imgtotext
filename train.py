@@ -7,9 +7,8 @@ from datasets import load_dataset
 from PIL import Image
 
 # Hyperparameters
-epochs = 3
+epochs = 10
 learning_rate = 0.001
-max_data_length = 500  
 
 # Load the pretrained model, feature extractor, and tokenizer
 model = VisionEncoderDecoderModel.from_pretrained("nlpconnect/vit-gpt2-image-captioning")
@@ -53,9 +52,7 @@ class CocoCaptionsDataset(torch.utils.data.Dataset):
 
 # Create dataset and dataloader
 coco_dataset = CocoCaptionsDataset(coco_dataset, feature_extractor)
-subset_indices = list(range(min(max_data_length, len(coco_dataset))))
-coco_subset = Subset(coco_dataset, subset_indices)
-data_loader = DataLoader(coco_subset, batch_size=32, shuffle=True)
+data_loader = DataLoader(coco_dataset, batch_size=32, shuffle=True, num_workers=4)
 
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
