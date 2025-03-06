@@ -27,7 +27,9 @@ cd <NOM_DU_PROJET>
 Installez les dépendances :
 
 ```bash
-pip install -r requirements.txt
+pip install transformer
+pip install datasets
+pip install PIL
 ```
 
 ## Entraînement du modèle
