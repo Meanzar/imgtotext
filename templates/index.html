@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Caption Generator</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #2a2a72, #009ffd);
+            color: white;
+            text-align: center;
+        }
+        @media (max-width: 768px) {
+            body {
+                padding: 20px;
+                align-items: stretch;
+                justify-content: flex-start;
+            }
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 40px rgba(0, 0, 0, 0.2);
+        }
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+        input[type="file"] {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+            cursor: pointer;
+        }
+        button {
+            margin-top: 15px;
+            padding: 10px 20px;
+            border: none;
+            background: #ff4081;
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            border-radius: 5px;
+        }
+        button:hover {
+            background: #e91e63;
+        }
+        .image-preview img {
+            margin-top: 20px;
+            max-width: 400px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+        .caption {
+            margin-top: 20px;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Image Caption Generator</h1>
+        <form id="upload-form" enctype="multipart/form-data">
+            <input type="file" id="file-input" name="file" accept="image/*">
+            <button type="submit">Generate Caption</button>
+        </form>
+        <div class="image-preview" id="image-preview"></div>
+        <div class="caption" id="caption"></div>
+    </div>
+
+    <script>
+        document.getElementById('upload-form').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const fileInput = document.getElementById('file-input');
+            const file = fileInput.files[0];
+            if (!file) {
+                alert('Please select a file.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const response = await fetch('/generate_caption', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+            if (result.error) {
+                alert(result.error);
+            } else {
+                const imagePreview = document.getElementById('image-preview');
+                const caption = document.getElementById('caption');
+                imagePreview.innerHTML = `<img src="${result.image_path}" alt="Uploaded Image">`;
+                caption.textContent = `Caption: ${result.caption}`;
+            }
+        });
+    </script>
+</body>
+</html>
